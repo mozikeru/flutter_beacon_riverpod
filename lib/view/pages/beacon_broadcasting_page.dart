@@ -1,122 +1,127 @@
 // ignore_for_file: avoid_print
 
 import 'package:flutter/material.dart';
-import 'package:flutter_beacon/flutter_beacon.dart';
+import 'package:flutter_beacon_riverpod/state_notifier/notifiers/beacon_broadcasting_notifier.dart';
+import 'package:flutter_beacon_riverpod/state_notifier/notifiers/bluetooth_auth_notifier.dart';
+import 'package:flutter_beacon_riverpod/state_notifier/states/beacon_broadcasting_state.dart';
 import 'package:flutter_beacon_riverpod/util/constants.dart';
+import 'package:flutter_hooks/flutter_hooks.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
 
-class BeaconBroadcastingPage extends StatefulWidget {
+class BeaconBroadcastingPage extends StatefulHookConsumerWidget {
   const BeaconBroadcastingPage({Key? key}) : super(key: key);
 
   @override
   _BeaconBroadcastingPageState createState() => _BeaconBroadcastingPageState();
 }
 
-class _BeaconBroadcastingPageState extends State<BeaconBroadcastingPage>
+class _BeaconBroadcastingPageState extends ConsumerState<BeaconBroadcastingPage>
     with WidgetsBindingObserver {
-  final clearFocus = FocusNode();
-  bool authorizationStatusOk = false;
-  bool locationServiceEnabled = false;
-  bool bluetoothEnabled = false;
-  bool broadcasting = false;
-
-  final regexUUID = RegExp(
-      r'[0-9a-fA-F]{8}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{12}');
-  final uuidController = TextEditingController(text: kProximityUUID);
-  final majorController = TextEditingController(text: '0');
-  final minorController = TextEditingController(text: '0');
-
-  bool get broadcastReady =>
-      authorizationStatusOk == true &&
-      locationServiceEnabled == true &&
-      bluetoothEnabled == true;
-
   @override
   void initState() {
-    WidgetsBinding.instance?.addObserver(this);
     super.initState();
 
-    checkAllRequirements();
-  }
-
-  ///
-  /// 権限チェック
-  ///
-  checkAllRequirements() async {
-    final bluetoothState = await flutterBeacon.bluetoothState;
-    final bluetoothEnabled = bluetoothState == BluetoothState.stateOn;
-    final authorizationStatus = await flutterBeacon.authorizationStatus;
-    final authorizationStatusOk =
-        authorizationStatus == AuthorizationStatus.allowed ||
-            authorizationStatus == AuthorizationStatus.whenInUse ||
-            authorizationStatus == AuthorizationStatus.always;
-    final locationServiceEnabled =
-        await flutterBeacon.checkLocationServicesIfEnabled;
-
-    print('broadcast: authorizationStatusOk=$authorizationStatusOk, '
-        'locationServiceEnabled=$locationServiceEnabled, '
-        'bluetoothEnabled=$bluetoothEnabled');
-
-    setState(() {
-      this.authorizationStatusOk = authorizationStatusOk;
-      this.locationServiceEnabled = locationServiceEnabled;
-      this.bluetoothEnabled = bluetoothEnabled;
-    });
+    ref.read(bluetoothAuthStateProvider.notifier).checkAllRequirements();
   }
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) async {
     print('AppLifecycleState = $state');
     if (state == AppLifecycleState.resumed) {
-      await checkAllRequirements();
+      await ref
+          .read(bluetoothAuthStateProvider.notifier)
+          .checkAllRequirements();
     } else if (state == AppLifecycleState.paused) {}
   }
 
   @override
   void dispose() {
     WidgetsBinding.instance?.removeObserver(this);
-    flutterBeacon.close;
-
-    clearFocus.dispose();
-
+    ref.read(bluetoothAuthStateProvider.notifier).cancel();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    final state = ref.watch(beaconBroadcastingStateProvider);
+    final notifier = ref.watch(beaconBroadcastingStateProvider.notifier);
+    final clearFocus = useFocusNode();
+    final uuidController = useTextEditingController(text: kProximityUUID);
+    final majorController = useTextEditingController(text: '0');
+    final minorController = useTextEditingController(text: '0');
+
     return Scaffold(
-      resizeToAvoidBottomInset: false,
       appBar: AppBar(
         title: const Text('Broadcast'),
         centerTitle: false,
       ),
-      body: GestureDetector(
-        onTap: () => FocusScope.of(context).requestFocus(clearFocus),
-        child: broadcastReady != true
-            ? const Center(child: Text('Please wait...'))
-            : Form(
-                autovalidateMode: AutovalidateMode.onUserInteraction,
-                child: Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      uuidField,
-                      majorField,
-                      minorField,
-                      const SizedBox(height: 16),
-                      buttonBroadcast,
-                    ],
-                  ),
+      body: _BodyWidget(
+        context: context,
+        clearFocus: clearFocus,
+        state: state,
+        notifier: notifier,
+        uuidController: uuidController,
+        majorController: majorController,
+        minorController: minorController,
+      ),
+    );
+  }
+}
+
+class _BodyWidget extends StatelessWidget {
+  _BodyWidget({
+    Key? key,
+    required this.context,
+    required this.clearFocus,
+    required this.state,
+    required this.notifier,
+    required this.uuidController,
+    required this.majorController,
+    required this.minorController,
+  }) : super(key: key);
+
+  final regexUUID = RegExp(
+      r'[0-9a-fA-F]{8}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{12}');
+
+  final BuildContext context;
+  final FocusNode clearFocus;
+  final BeaconBroadcastingState state;
+  final BeaconBroadcastingNotifier notifier;
+  final TextEditingController uuidController;
+  final TextEditingController majorController;
+  final TextEditingController minorController;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () => FocusScope.of(context).requestFocus(clearFocus),
+      child: state.broadcastReady != true
+          ? const Center(child: Text('Please wait...'))
+          : Form(
+              autovalidateMode: AutovalidateMode.onUserInteraction,
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    uuidField,
+                    majorField,
+                    minorField,
+                    const SizedBox(height: 16),
+                    buttonBroadcast,
+                  ],
                 ),
               ),
-      ),
+            ),
     );
   }
 
   Widget get uuidField {
     return TextFormField(
-      readOnly: broadcasting,
+      readOnly: state.isBroadcasting,
       controller: uuidController,
       decoration: const InputDecoration(
         labelText: 'Proximity UUID',
@@ -137,7 +142,7 @@ class _BeaconBroadcastingPageState extends State<BeaconBroadcastingPage>
 
   Widget get majorField {
     return TextFormField(
-      readOnly: broadcasting,
+      readOnly: state.isBroadcasting,
       controller: majorController,
       decoration: const InputDecoration(
         labelText: 'Major',
@@ -165,7 +170,7 @@ class _BeaconBroadcastingPageState extends State<BeaconBroadcastingPage>
 
   Widget get minorField {
     return TextFormField(
-      readOnly: broadcasting,
+      readOnly: state.isBroadcasting,
       controller: minorController,
       decoration: const InputDecoration(
         labelText: 'Minor',
@@ -194,35 +199,25 @@ class _BeaconBroadcastingPageState extends State<BeaconBroadcastingPage>
   Widget get buttonBroadcast {
     final ButtonStyle raisedButtonStyle = ElevatedButton.styleFrom(
       onPrimary: Colors.white,
-      primary: broadcasting ? Colors.red : Theme.of(context).primaryColor,
+      primary:
+          state.isBroadcasting ? Colors.red : Theme.of(context).primaryColor,
       minimumSize: const Size(88, 36),
       padding: const EdgeInsets.symmetric(horizontal: 16),
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.all(Radius.circular(2)),
       ),
     );
+
     return ElevatedButton(
       style: raisedButtonStyle,
       onPressed: () async {
-        if (broadcasting) {
-          await flutterBeacon.stopBroadcast();
-        } else {
-          await flutterBeacon.startBroadcast(BeaconBroadcast(
-            proximityUUID: uuidController.text,
-            major: int.tryParse(majorController.text) ?? 0,
-            minor: int.tryParse(minorController.text) ?? 0,
-          ));
-        }
-
-        final isBroadcasting = await flutterBeacon.isBroadcasting();
-
-        if (mounted) {
-          setState(() {
-            broadcasting = isBroadcasting;
-          });
-        }
+        notifier.toggleBroadcasting(
+          uuidController.text,
+          int.tryParse(majorController.text) ?? 0,
+          int.tryParse(minorController.text) ?? 0,
+        );
       },
-      child: Text('Broadcast${broadcasting ? 'ing' : ''}'),
+      child: Text('Broadcast${state.isBroadcasting ? 'ing' : ''}'),
     );
   }
 }
