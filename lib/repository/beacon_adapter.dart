@@ -1,3 +1,5 @@
+// ignore_for_file: avoid_print
+
 import 'dart:async';
 import 'dart:core';
 import 'package:flutter/services.dart';
@@ -78,76 +80,129 @@ class BeaconAdapter implements BeaconAdapterBase {
   BeaconAdapter();
 
   @override
-  StreamController<List<Beacon>>? streamBeaconRangingController;
+  StreamController<List<Beacon>>? streamBeaconRangingController =
+      StreamController();
+  StreamSubscription<RangingResult>? _streamRanging;
 
   @override
-  Future cancel() {
-    // TODO: implement cancel
-    throw UnimplementedError();
+  Future requestLocationAuthorization() async {
+    await flutterBeacon.requestAuthorization;
   }
 
   @override
-  Future<BluetoothAuthState> getAllRequirements() {
-    // TODO: implement getAllRequirements
-    throw UnimplementedError();
+  Future openLocationSettings() async {
+    await flutterBeacon.openLocationSettings;
   }
 
   @override
-  Future initializeScanning() {
-    // TODO: implement initializeScanning
-    throw UnimplementedError();
-  }
-
-  @override
-  Future<bool> isBroadcasting() {
-    // TODO: implement isBroadcasting
-    throw UnimplementedError();
+  Future openBluetoothSettings() async {
+    try {
+      await flutterBeacon.openBluetoothSettings;
+    } on PlatformException catch (e) {
+      print(e);
+      rethrow;
+    }
   }
 
   @override
   Stream<BluetoothState> listeningBluetoothState() {
-    // TODO: implement listeningBluetoothState
-    throw UnimplementedError();
+    return flutterBeacon.bluetoothStateChanged();
+  }
+
+  @override
+  Future initializeScanning() async {
+    await flutterBeacon.initializeScanning;
+  }
+
+  @override
+  Future<BluetoothAuthState> getAllRequirements() async {
+    final bluetoothState = await flutterBeacon.bluetoothState;
+    final bluetoothEnabled = bluetoothState == BluetoothState.stateOn;
+    final authorizationStatus = await flutterBeacon.authorizationStatus;
+    final authorizationStatusOk =
+        authorizationStatus == AuthorizationStatus.allowed ||
+            authorizationStatus == AuthorizationStatus.whenInUse ||
+            authorizationStatus == AuthorizationStatus.always;
+    final locationServiceEnabled =
+        await flutterBeacon.checkLocationServicesIfEnabled;
+
+    print('RETURNED, authorizationStatusOk=$authorizationStatusOk, '
+        'locationServiceEnabled=$locationServiceEnabled, '
+        'bluetoothEnabled=$bluetoothEnabled');
+
+    return BluetoothAuthState(
+      authorizationStatusOk: authorizationStatusOk,
+      bluetoothEnabled: bluetoothEnabled,
+      locationServiceEnabled: locationServiceEnabled,
+    );
   }
 
   @override
   void listeningRanging(bool mounted) {
-    // TODO: implement listeningRanging
+    final regions = <Region>[
+      Region(
+        identifier: 'Cubeacon',
+        proximityUUID: kProximityUUID,
+      ),
+    ];
+
+    _streamRanging = flutterBeacon.ranging(regions).listen(
+      (RangingResult result) {
+        print(result);
+        if (mounted) {
+          // if (isMounted()) {
+          final beacons = <Beacon>[];
+          beacons.addAll(result.beacons);
+          beacons.sort(_compareParameters);
+          // listenしているものにビーコン情報を届ける (1)
+          streamBeaconRangingController?.sink.add(beacons);
+        }
+      },
+    );
+  }
+
+  ///
+  /// 並び替え
+  ///
+  int _compareParameters(Beacon a, Beacon b) {
+    int compare = a.proximityUUID.compareTo(b.proximityUUID);
+
+    if (compare == 0) {
+      compare = a.major.compareTo(b.major);
+    }
+
+    if (compare == 0) {
+      compare = a.minor.compareTo(b.minor);
+    }
+
+    return compare;
   }
 
   @override
-  Future openBluetoothSettings() {
-    // TODO: implement openBluetoothSettings
-    throw UnimplementedError();
+  Future pauseScanBeacon() async {
+    _streamRanging?.pause();
   }
 
   @override
-  Future openLocationSettings() {
-    // TODO: implement openLocationSettings
-    throw UnimplementedError();
+  Future<void> cancel() async {
+    await streamBeaconRangingController?.close();
+    _streamRanging?.cancel();
+    flutterBeacon.stopBroadcast();
+    flutterBeacon.close;
   }
 
   @override
-  Future pauseScanBeacon() {
-    // TODO: implement pauseScanBeacon
-    throw UnimplementedError();
+  Future startBroadcast(BeaconBroadcast beaconBroadcast) async {
+    await flutterBeacon.startBroadcast(beaconBroadcast);
   }
 
   @override
-  Future requestLocationAuthorization() {
-    // TODO: implement requestLocationAuthorization
-    throw UnimplementedError();
+  Future stopBroadcast() async {
+    await flutterBeacon.stopBroadcast();
   }
 
   @override
-  Future startBroadcast(BeaconBroadcast beaconBroadcast) {
-    // TODO: implement startBroadcast
-    throw UnimplementedError();
-  }
-
-  @override
-  Future stopBroadcast() {
-    // TODO: implement stopBroadcast
-    throw UnimplementedError();
+  Future<bool> isBroadcasting() async {
+    return await flutterBeacon.isBroadcasting();
   }
 }
