@@ -53,7 +53,6 @@ class _BeaconBroadcastingPageState extends ConsumerState<BeaconBroadcastingPage>
     return Scaffold(
       appBar: AppBar(
         title: const Text('Broadcast'),
-        centerTitle: false,
       ),
       body: _BodyWidget(
         context: context,
