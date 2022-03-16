@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_beacon_riverpod/view/pages/beacon_scanning_page.dart';
+import 'package:flutter_beacon_riverpod/view/home_page.dart';
 
 void main() {
   runApp(const MainApp());
@@ -18,7 +18,7 @@ class MainApp extends StatelessWidget {
       darkTheme: ThemeData(
         brightness: Brightness.dark,
       ),
-      home: const BeaconScanningPage(),
+      home: const HomePage(),
     );
   }
 }
