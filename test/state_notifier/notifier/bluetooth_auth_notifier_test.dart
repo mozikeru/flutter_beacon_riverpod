@@ -4,7 +4,7 @@ import 'package:flutter_beacon_riverpod/state_notifier/states/bluetooth_auth_sta
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
-import '../../repository/fake_beacon_adapter.dart';
+import '../../mock/fake_beacon_adapter.dart';
 
 void main() {
   // Riverpodが管理するProviderを使用できるようにする

@@ -14,8 +14,7 @@ class FakeBeaconAdapter implements BeaconAdapterBase {
 
   bool _isBroadcasting = false;
 
-  @override
-  StreamController<List<Beacon>>? streamBeaconRangingController =
+  StreamController<List<Beacon>>? _streamBeaconRangingController =
       StreamController();
 
   @override
@@ -42,7 +41,7 @@ class FakeBeaconAdapter implements BeaconAdapterBase {
   }
 
   @override
-  void listeningRanging(bool mounted) {
+  void startRanging(bool mounted) {
     // ignore: unused_local_variable
     Timer _timer = Timer.periodic(const Duration(seconds: 1), (Timer t) {
       // ダミーの信号データを返す(2)
@@ -54,8 +53,13 @@ class FakeBeaconAdapter implements BeaconAdapterBase {
           accuracy: kDummyAccuracy,
         ),
       ];
-      streamBeaconRangingController?.sink.add(dummyBeaons);
+      _streamBeaconRangingController?.sink.add(dummyBeaons);
     });
+  }
+
+  @override
+  Stream<List<Beacon>> listeningRanging() {
+    return _streamBeaconRangingController!.stream;
   }
 
   @override

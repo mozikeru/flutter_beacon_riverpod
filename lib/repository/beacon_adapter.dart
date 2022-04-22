@@ -9,8 +9,6 @@ import 'package:flutter_beacon_riverpod/util/constants.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 abstract class BeaconAdapterBase {
-  StreamController<List<Beacon>>? streamBeaconRangingController;
-
   ///
   /// 位置情報の権限許可リクエスト
   ///
@@ -42,9 +40,14 @@ abstract class BeaconAdapterBase {
   Future<BluetoothAuthState> getAllRequirements();
 
   ///
+  /// レンジング監視開始
+  ///
+  void startRanging(bool mounted);
+
+  ///
   /// レンジングによる監視
   ///
-  void listeningRanging(bool mounted);
+  Stream<List<Beacon>> listeningRanging();
 
   ///
   /// ビーコンスキャン停止
@@ -79,8 +82,7 @@ final beaconAdapterProvider = Provider.autoDispose<BeaconAdapterBase>((ref) {
 class BeaconAdapter implements BeaconAdapterBase {
   BeaconAdapter();
 
-  @override
-  StreamController<List<Beacon>>? streamBeaconRangingController =
+  StreamController<List<Beacon>>? _streamBeaconRangingController =
       StreamController();
   StreamSubscription<RangingResult>? _streamRanging;
 
@@ -138,7 +140,7 @@ class BeaconAdapter implements BeaconAdapterBase {
   }
 
   @override
-  void listeningRanging(bool mounted) {
+  void startRanging(bool mounted) {
     final regions = <Region>[
       Region(
         identifier: 'Cubeacon',
@@ -155,10 +157,15 @@ class BeaconAdapter implements BeaconAdapterBase {
           beacons.addAll(result.beacons);
           beacons.sort(_compareParameters);
           // listenしているものにビーコン情報を届ける (1)
-          streamBeaconRangingController?.sink.add(beacons);
+          _streamBeaconRangingController?.sink.add(beacons);
         }
       },
     );
+  }
+
+  @override
+  Stream<List<Beacon>> listeningRanging() {
+    return _streamBeaconRangingController!.stream;
   }
 
   ///
@@ -185,7 +192,6 @@ class BeaconAdapter implements BeaconAdapterBase {
 
   @override
   Future<void> cancel() async {
-    await streamBeaconRangingController?.close();
     _streamRanging?.cancel();
     flutterBeacon.stopBroadcast();
     flutterBeacon.close;

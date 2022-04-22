@@ -1,8 +1,5 @@
 // ignore_for_file: avoid_print
 
-import 'dart:async';
-
-import 'package:flutter_beacon/flutter_beacon.dart';
 import 'package:flutter_beacon_riverpod/repository/beacon_adapter.dart';
 import 'package:flutter_beacon_riverpod/state_notifier/states/beacon_scanning_state.dart';
 import 'package:flutter_beacon_riverpod/state_notifier/states/bluetooth_auth_state.dart';
@@ -32,18 +29,12 @@ class BeaconScanningNotifier extends StateNotifier<BeaconScanningState> {
 
   final BluetoothAuthState _bluetoothAuthState;
   final BeaconAdapterBase _beaconAdapter;
-  StreamSubscription<List<Beacon>>? _streamBeaconRangingSubscription;
 
-  _listeningRanging(bool mounted) {
-    _streamBeaconRangingSubscription =
-        _beaconAdapter.streamBeaconRangingController?.stream.listen((beacons) {
+  void _listeningRanging(bool mounted) {
+    _beaconAdapter.listeningRanging().listen((beacons) {
       state = state.copyWith(beacons: beacons);
     });
 
-    _beaconAdapter.listeningRanging(mounted);
-  }
-
-  Future cancel() async {
-    _streamBeaconRangingSubscription?.cancel();
+    _beaconAdapter.startRanging(mounted);
   }
 }
