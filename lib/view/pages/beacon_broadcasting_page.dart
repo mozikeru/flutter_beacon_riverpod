@@ -46,7 +46,7 @@ class _BeaconBroadcastingPageState extends ConsumerState<BeaconBroadcastingPage>
     final state = ref.watch(beaconBroadcastingStateProvider);
     final notifier = ref.watch(beaconBroadcastingStateProvider.notifier);
     final clearFocus = useFocusNode();
-    final uuidController = useTextEditingController(text: kProximityUUID);
+    final uuidController = useTextEditingController(text: kProximityUUIDC);
     final majorController = useTextEditingController(text: '0');
     final minorController = useTextEditingController(text: '0');
 
