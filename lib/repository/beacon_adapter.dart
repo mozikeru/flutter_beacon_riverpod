@@ -143,18 +143,35 @@ class BeaconAdapter implements BeaconAdapterBase {
   void startRanging(bool mounted) {
     final regions = <Region>[
       Region(
-        identifier: 'Cubeacon',
-        proximityUUID: kProximityUUID,
+        identifier: 'beaconA',
+        proximityUUID: kProximityUUIDA,
+      ),
+      Region(
+        identifier: 'beaconB',
+        proximityUUID: kProximityUUIDB,
+      ),
+      Region(
+        identifier: 'beaconC',
+        proximityUUID: kProximityUUIDC,
+      ),
+      Region(
+        identifier: 'beaconD',
+        proximityUUID: kProximityUUIDD,
+      ),
+      Region(
+        identifier: 'beaconE',
+        proximityUUID: kProximityUUIDE,
       ),
     ];
 
     _streamRanging = flutterBeacon.ranging(regions).listen(
       (RangingResult result) {
-        print(result);
+        print(result.beacons);
         if (mounted) {
           // if (isMounted()) {
           final beacons = <Beacon>[];
           beacons.addAll(result.beacons);
+          //beacons.addAll(result.beacons.proximityUUID);
           beacons.sort(_compareParameters);
           // listenしているものにビーコン情報を届ける (1)
           _streamBeaconRangingController?.sink.add(beacons);
