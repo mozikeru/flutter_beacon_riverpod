@@ -1,0 +1,17 @@
+function doPost(e) {  
+
+  // パラメータのパース  
+  let message = e.postData.getDataAsString();
+  let data = JSON.parse(message);
+  //var order_number = e.parameter.order_number;
+  
+  //シートを扱う準備
+  //var myActiveSpreadSheet = SpreadsheetApp.getActiveSpreadsheet();
+  var myActiveSpreadSheet = SpreadsheetApp.openById('シートidを指定');
+  var myActiveSheet = myActiveSpreadSheet.getSheetByName('demo');
+  
+  //myActiveSheet.appendRow([uuid]);
+  myActiveSheet.appendRow([data.phone, data.uuid, data.name, data.time]);
+
+  return;
+}
