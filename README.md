@@ -1,25 +1,13 @@
 # flutter_beacon_riverpod
 
-Flutter Beacon~Riverpod‚É‚æ‚éƒr[ƒRƒ“”­M/ŒŸo•û–@
+https://github.com/mamorucom/flutter_beacon_riverpod
+ã‹ã‚‰ãƒ•ã‚©ãƒ¼ã‚¯ã—ã¦ä½œæˆã€‚
+ãƒ“ãƒ¼ã‚³ãƒ³æ¤œå‡ºå¾Œã€Googleã‚¹ãƒ—ãƒ¬ãƒƒãƒ‰ã‚·ãƒ¼ãƒˆAPIã«å¯¾ã—ã¦æ¤œå‡ºå†…å®¹ã‚’POSTã™ã‚‹å‡¦ç†ã‚’è¿½åŠ 
 
 
-## ƒA[ƒLƒeƒNƒ`ƒƒ
+## POSTå…ˆã‚¹ãƒ—ãƒ¬ãƒƒãƒ‰ã‚·ãƒ¼ãƒˆã®æŒ‡å®šæ–¹æ³•
+[ã‚¹ãƒ—ãƒ¬ãƒƒãƒ‰ã‚·ãƒ¼ãƒˆIDã‚’æŒ‡å®š]
+flutter_beacon_riverpod\lib\state_notifier\notifiers\beacon_scanning_notifier.dart
 
-MVVM+Repositoryƒpƒ^[ƒ“‚ğQl‚ÉAƒŒƒCƒ„[•ª‚¯‚µ‚Ä‚¢‚Ü‚·B 
-
-![](screenshot/zenn1-MVVM+Repositoryƒpƒ^[ƒ“After.drawio.png)
-
-
-## ƒfƒBƒŒƒNƒgƒŠ\¬
-
-```
-lib
-„¥„Ÿrepository
-„¥„Ÿstate_notifier
-„   „¥„Ÿnotifiers  // MVVM‚ÅŒ¾‚¤AViewModel“I‚È‚â‚Â
-„   „¤„Ÿstates@   // MVVM‚ÅŒ¾‚¤AModel“I‚È‚â‚Â
-„¥„Ÿutil
-„¤„Ÿview
-    „¤„Ÿpages
-```
-
+## POSTå…ˆã‚¹ãƒ—ãƒ¬ãƒƒãƒ‰ã‚·ãƒ¼ãƒˆå´ã‚³ãƒ¼ãƒ‰ã«ã¤ã„ã¦
+GAS_doPOSTcode.txtã®å†…å®¹ã‚’ã‚¹ãƒ—ãƒ¬ãƒƒãƒ‰ã‚·ãƒ¼ãƒˆã®AppsScriptã‚³ãƒ¼ãƒ‰ã¨ã—ã¦ä¿å­˜ã—ã¦ãƒ‡ãƒ—ãƒ­ã‚¤ã™ã‚‹
