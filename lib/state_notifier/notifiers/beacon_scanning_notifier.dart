@@ -51,20 +51,20 @@ class BeaconScanningNotifier extends StateNotifier<BeaconScanningState> {
   void _request(List beacons) async {
 
     var dnow = DateTime.now();
-    var phone = "�����o�[3";
+    var phone = "[端末名称]";
 
     for (int i = 0; i < beacons.length; i++) {
       print(beacons[i]);
 
-      // ���񌟒m���͎������L�^���Ȃ��Ƃ����Ȃ�
+      // 初回検知時は時刻を記録しないといけない
       if (!detectTimes.containsKey(beacons[i].proximityUUID)) {
         detectTimes[beacons[i].proximityUUID] = dnow;
       }
-      // �v�Z�p�ɑO��L�^����������20�b���Z
+      // 計算用に前回記録した時刻に20秒加算
       var addtime = detectTimes[beacons[i].proximityUUID].add(Duration(seconds: 20));
-      // �u�O��擾����������20�b���Z���������v�����ݎ��������ߋ��������ꍇ�̂�Google�X�v���b�h�V�[�g�ɋL�^����
+      // 「前回取得した時刻に20秒加算した時刻」が現在時刻よりも過去だった場合のみGoogleスプレッドシートに記録する
       if (addtime.isAfter(dnow)) {
-        // �������X�L�b�v
+        // 処理をスキップ
         print("skip!!");
         continue;
       }
@@ -98,7 +98,7 @@ class BeaconScanningNotifier extends StateNotifier<BeaconScanningState> {
         return;
       }
 
-      // �����X�L�b�v���Ȃ������ꍇ�͎������L�^
+      // 処理スキップしなかった場合は時刻を記録
       detectTimes[beacons[i].proximityUUID] = dnow;
     }
   }
